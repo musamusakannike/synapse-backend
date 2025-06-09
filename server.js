@@ -2,6 +2,7 @@ const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
 const rateLimit = require("express-rate-limit")
+const morgan = require("morgan")
 require("dotenv").config()
 
 // Add this near the top of the imports
@@ -30,6 +31,7 @@ app.use(
 )
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true }))
+app.use(morgan("dev"))
 
 // Connect to MongoDB
 mongoose
