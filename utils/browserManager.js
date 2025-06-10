@@ -53,7 +53,6 @@ class BrowserManager {
       console.log("Initializing new browser instance");
       const browser = await puppeteer.launch({
         headless: "new",
-        executablePath: puppeteer.executablePath(),
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
