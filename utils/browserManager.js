@@ -1,17 +1,17 @@
-const puppeteer = require("puppeteer")
+const puppeteer = require("puppeteer");
 
 /**
  * Browser Manager - Handles Puppeteer browser lifecycle
  */
 class BrowserManager {
   constructor() {
-    this.browser = null
-    this.isInitializing = false
-    this.initPromise = null
-    this.lastUsed = Date.now()
+    this.browser = null;
+    this.isInitializing = false;
+    this.initPromise = null;
+    this.lastUsed = Date.now();
 
     // Auto-close browser after inactivity
-    this.startIdleTimer()
+    this.startIdleTimer();
   }
 
   /**
@@ -21,25 +21,25 @@ class BrowserManager {
   async getBrowser() {
     // If browser exists and is connected, return it
     if (this.browser && this.browser.isConnected()) {
-      this.lastUsed = Date.now()
-      return this.browser
+      this.lastUsed = Date.now();
+      return this.browser;
     }
 
     // If initialization is in progress, wait for it
     if (this.isInitializing) {
-      return this.initPromise
+      return this.initPromise;
     }
 
     // Initialize new browser
-    this.isInitializing = true
-    this.initPromise = this._initBrowser()
+    this.isInitializing = true;
+    this.initPromise = this._initBrowser();
 
     try {
-      this.browser = await this.initPromise
-      return this.browser
+      this.browser = await this.initPromise;
+      return this.browser;
     } finally {
-      this.isInitializing = false
-      this.lastUsed = Date.now()
+      this.isInitializing = false;
+      this.lastUsed = Date.now();
     }
   }
 
@@ -50,9 +50,10 @@ class BrowserManager {
    */
   async _initBrowser() {
     try {
-      console.log("Initializing new browser instance")
+      console.log("Initializing new browser instance");
       const browser = await puppeteer.launch({
         headless: "new",
+        executablePath: puppeteer.executablePath(),
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -61,18 +62,18 @@ class BrowserManager {
           "--disable-gpu",
           "--window-size=1920x1080",
         ],
-      })
+      });
 
       // Handle browser disconnection
       browser.on("disconnected", () => {
-        console.log("Browser disconnected")
-        this.browser = null
-      })
+        console.log("Browser disconnected");
+        this.browser = null;
+      });
 
-      return browser
+      return browser;
     } catch (error) {
-      console.error("Error initializing browser:", error)
-      throw error
+      console.error("Error initializing browser:", error);
+      throw error;
     }
   }
 
@@ -83,12 +84,12 @@ class BrowserManager {
   async closeBrowser() {
     if (this.browser) {
       try {
-        await this.browser.close()
-        console.log("Browser closed successfully")
+        await this.browser.close();
+        console.log("Browser closed successfully");
       } catch (error) {
-        console.error("Error closing browser:", error)
+        console.error("Error closing browser:", error);
       } finally {
-        this.browser = null
+        this.browser = null;
       }
     }
   }
@@ -99,31 +100,33 @@ class BrowserManager {
    */
   startIdleTimer() {
     // Check every 5 minutes
-    const IDLE_CHECK_INTERVAL = 5 * 60 * 1000
+    const IDLE_CHECK_INTERVAL = 5 * 60 * 1000;
     // Close after 15 minutes of inactivity
-    const MAX_IDLE_TIME = 15 * 60 * 1000
+    const MAX_IDLE_TIME = 15 * 60 * 1000;
 
     setInterval(async () => {
       if (this.browser && Date.now() - this.lastUsed > MAX_IDLE_TIME) {
-        console.log(`Browser idle for ${MAX_IDLE_TIME / 60000} minutes, closing`)
-        await this.closeBrowser()
+        console.log(
+          `Browser idle for ${MAX_IDLE_TIME / 60000} minutes, closing`
+        );
+        await this.closeBrowser();
       }
-    }, IDLE_CHECK_INTERVAL)
+    }, IDLE_CHECK_INTERVAL);
   }
 }
 
 // Create singleton instance
-const browserManager = new BrowserManager()
+const browserManager = new BrowserManager();
 
 // Handle process termination
 process.on("SIGINT", async () => {
-  await browserManager.closeBrowser()
-  process.exit(0)
-})
+  await browserManager.closeBrowser();
+  process.exit(0);
+});
 
 process.on("SIGTERM", async () => {
-  await browserManager.closeBrowser()
-  process.exit(0)
-})
+  await browserManager.closeBrowser();
+  process.exit(0);
+});
 
-module.exports = browserManager
+module.exports = browserManager;
