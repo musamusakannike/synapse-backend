@@ -3,6 +3,7 @@ FROM node:16-slim
 
 # Install necessary dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \
+  chromium \
   wget \
   ca-certificates \
   fonts-liberation \
