@@ -1,5 +1,5 @@
 # Use official Node.js image as base image
-FROM node:16-slim
+FROM node:20-slim
 
 # Install necessary dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \
