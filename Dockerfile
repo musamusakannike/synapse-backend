@@ -1,38 +1,42 @@
+# ---- Base image with Chrome + Puppeteer pre-installed ----
 FROM ghcr.io/puppeteer/puppeteer:20.9.0
 
-# Set Puppeteer environment variables
+# Runtime settings for Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
+    NODE_ENV=production
 
-# 👤 Switch to root to install packages
+# ----------------------------------------------------------
+# 1️⃣ Root phase – install only the extra packages we need
+#    (DNS tools & CA bundle for MongoDB Atlas TLS)
+# ----------------------------------------------------------
 USER root
 
-# 🛠 Add missing Google public key to fix apt update
-RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google.gpg \
-  && echo "deb [signed-by=/usr/share/keyrings/google.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-
-# ✅ Install TLS and DNS dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    curl \
-    gnupg \
-    dirmngr \
-    netbase \
-    dnsutils \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        netbase \
+        dnsutils \
     && rm -rf /var/lib/apt/lists/*
 
-# 🔒 Return to non-root Puppeteer user
+# ----------------------------------------------------------
+# 2️⃣ Drop back to the non-root Puppeteer user for security
+# ----------------------------------------------------------
 USER pptruser
 
-# Set working directory
+# ----------------------------------------------------------
+# 3️⃣ App files & dependencies
+# ----------------------------------------------------------
 WORKDIR /usr/src/app
 
-# Install Node.js dependencies
+# Install production dependencies with npm ci
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --omit=dev
 
-# Copy application code
+# Copy the rest of your application
 COPY . .
 
-# Start the application
+# ----------------------------------------------------------
+# 4️⃣ Start the server
+# ----------------------------------------------------------
 CMD ["node", "server.js"]
