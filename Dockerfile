@@ -4,6 +4,9 @@ FROM ghcr.io/puppeteer/puppeteer:20.9.0
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
+# 🔐 Switch to root for package installation
+USER root
+
 # ✅ Install TLS and DNS dependencies required for MongoDB Atlas
 RUN apt-get update && apt-get install -y \
     ca-certificates \
@@ -13,6 +16,9 @@ RUN apt-get update && apt-get install -y \
     netbase \
     dnsutils \
     && rm -rf /var/lib/apt/lists/*
+
+# ⚙️ Return to non-root user for Puppeteer
+USER pptruser
 
 # Set working directory
 WORKDIR /usr/src/app
